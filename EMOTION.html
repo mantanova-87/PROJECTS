@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmotionLens - Sentiment & Emotion Highlighter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #4a6fdc;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            padding-bottom: 2rem;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .hero-section h1 {
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .hero-section p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            background-color: var(--light-color);
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            border-radius: 12px 12px 0 0 !important;
+        }
+
+        .emotion-badge {
+            display: inline-block;
+            padding: 0.35rem 0.65rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 50rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .emotion-positive {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: var(--success-color);
+        }
+
+        .emotion-negative {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: var(--danger-color);
+        }
+
+        .emotion-neutral {
+            background-color: rgba(108, 117, 125, 0.2);
+            color: var(--secondary-color);
+        }
+
+        .emotion-joy {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #856404;
+        }
+
+        .emotion-anger {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: var(--danger-color);
+        }
+
+        .emotion-sadness {
+            background-color: rgba(13, 110, 253, 0.2);
+            color: #0a58ca;
+        }
+
+        .emotion-fear {
+            background-color: rgba(111, 66, 193, 0.2);
+            color: #6f42c1;
+        }
+
+        .emotion-surprise {
+            background-color: rgba(23, 162, 184, 0.2);
+            color: #0c5460;
+        }
+
+        .emotion-disgust {
+            background-color: rgba(25, 135, 84, 0.2);
+            color: #0f5132;
+        }
+
+        .demo-section {
+            background-color: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .highlight-positive {
+            background-color: rgba(40, 167, 69, 0.2);
+            border-radius: 4px;
+            padding: 2px 4px;
+            position: relative;
+        }
+
+        .highlight-negative {
+            background-color: rgba(220, 53, 69, 0.2);
+            border-radius: 4px;
+            padding: 2px 4px;
+            position: relative;
+        }
+
+        .highlight-neutral {
+            background-color: rgba(108, 117, 125, 0.2);
+            border-radius: 4px;
+            padding: 2px 4px;
+            position: relative;
+        }
+
+        .emotion-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .emotion-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .highlight-positive:hover .emotion-tooltip,
+        .highlight-negative:hover .emotion-tooltip,
+        .highlight-neutral:hover .emotion-tooltip {
+            opacity: 1;
+        }
+
+        .settings-panel {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #3a5fc9;
+            border-color: #3a5fc9;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .tab-content {
+            padding-top: 1.5rem;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            font-weight: 600;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--secondary-color);
+            border-bottom: 3px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--primary-color);
+            border-bottom-color: rgba(74, 111, 220, 0.3);
+        }
+
+        .extension-preview {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            margin-top: 1rem;
+        }
+
+        .extension-popup {
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .extension-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .extension-body {
+            padding: 1rem;
+        }
+
+        .extension-footer {
+            background-color: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .sensitivity-slider {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            z-index: 1050;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+        }
+
+        .notification-success .notification-icon {
+            color: var(--success-color);
+        }
+
+        .notification-info .notification-icon {
+            color: var(--info-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-eye-fill me-2"></i>EmotionLens
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#demo">Demo</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#settings">Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#install">Install</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="container text-center">
+            <h1>EmotionLens: Sentiment & Emotion Highlighter</h1>
+            <p class="lead">Making digital communications more accessible for neurodiverse users</p>
+            <p>Analyze and understand emotional context in emails, messages, and web content with real-time highlighting</p>
+            <button class="btn btn-light btn-lg mt-3" id="installBtn">
+                <i class="bi bi-download me-2"></i>Install Extension
+            </button>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="container my-5">
+        <h2 class="text-center mb-4">Key Features</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-robot feature-icon"></i>
+                        <h5 class="card-title">Advanced NLP Analysis</h5>
+                        <p class="card-text">Powered by DistilBERT and RoBERTa models for accurate sentiment and emotion detection in real-time.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-palette feature-icon"></i>
+                        <h5 class="card-title">Visual Highlighting</h5>
+                        <p class="card-text">Color-coded highlighting and emoji cues make emotional context immediately visible and understandable.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-sliders feature-icon"></i>
+                        <h5 class="card-title">Customizable Settings</h5>
+                        <p class="card-text">Adjust sensitivity, filter specific emotions, and personalize highlighting styles to match your needs.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-globe feature-icon"></i>
+                        <h5 class="card-title">Universal Compatibility</h5>
+                        <p class="card-text">Works across websites, email platforms, and messaging applications for consistent support everywhere.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-info-circle feature-icon"></i>
+                        <h5 class="card-title">Contextual Explanations</h5>
+                        <p class="card-text">Hover over highlighted text to see explanations of why content was classified with a specific emotion.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-shield-check feature-icon"></i>
+                        <h5 class="card-title">Privacy-First Design</h5>
+                        <p class="card-text">All processing happens locally on your device. No text data is sent to external servers.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="container">
+        <div class="demo-section">
+            <h2 class="mb-4">Interactive Demo</h2>
+            <p>Try the emotion highlighting feature with the sample text below. Hover over highlighted sections to see emotion details.</p>
+            
+            <ul class="nav nav-tabs" id="demoTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button" role="tab">Email Example</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="chat-tab" data-bs-toggle="tab" data-bs-target="#chat" type="button" role="tab">Chat Example</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="article-tab" data-bs-toggle="tab" data-bs-target="#article" type="button" role="tab">Article Example</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="demoTabsContent">
+                <div class="tab-pane fade show active" id="email" role="tabpanel">
+                    <div class="mt-3 p-3 border rounded">
+                        <h5>Subject: Project Update</h5>
+                        <p class="mb-2">Hi Team,</p>
+                        <p>I wanted to <span class="highlight-negative">express my concern</span> about the current project timeline. We're <span class="highlight-negative">falling behind</span> on several key deliverables, and I'm <span class="highlight-negative">worried</span> about meeting our deadline.</p>
+                        <p>However, I'm <span class="highlight-positive">confident</span> that if we work together and <span class="highlight-positive">focus</span> on the critical path, we can get back on track. I've <span class="highlight-positive">appreciated</span> everyone's hard work so far.</p>
+                        <p>Please let me know your thoughts on how we can <span class="highlight-neutral">address</span> these challenges.</p>
+                        <p class="mb-0">Best regards,<br>Alex</p>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="chat" role="tabpanel">
+                    <div class="mt-3 p-3 border rounded">
+                        <div class="mb-3">
+                            <strong>Sarah:</strong> Hey! Did you see the <span class="highlight-positive">exciting</span> news about our team winning the award? I'm so <span class="highlight-positive">thrilled</span>! 🎉
+                        </div>
+                        <div class="mb-3">
+                            <strong>Mike:</strong> That's <span class="highlight-positive">amazing</span>! I'm <span class="highlight-positive">proud</span> of what we've accomplished together.
+                        </div>
+                        <div class="mb-3">
+                            <strong>Sarah:</strong> I know, right? But I'm a bit <span class="highlight-negative">nervous</span> about the presentation next week. I always get <span class="highlight-negative">anxious</span> before big events.
+                        </div>
+                        <div class="mb-3">
+                            <strong>Mike:</strong> Don't worry! You'll do <span class="highlight-positive">great</span>. We can practice together if you want.
+                        </div>
+                        <div class="mb-0">
+                            <strong>Sarah:</strong> That would be <span class="highlight-positive">wonderful</span>! Thank you for your <span class="highlight-positive">support</span>.
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="article" role="tabpanel">
+                    <div class="mt-3 p-3 border rounded">
+                        <h4>New Study Reveals Impact of Remote Work on Mental Health</h4>
+                        <p>A recent study has <span class="highlight-neutral">examined</span> the effects of remote work on employees' mental health. Researchers <span class="highlight-neutral">found</span> that while many workers <span class="highlight-positive">appreciate</span> the flexibility of working from home, some experience <span class="highlight-negative">feelings of isolation</span> and <span class="highlight-negative">anxiety</span>.</p>
+                        <p>The study <span class="highlight-neutral">revealed</span> that employees who have regular virtual social interactions report <span class="highlight-positive">higher levels of satisfaction</span> and <span class="highlight-positive">better mental well-being</span>. In contrast, those with limited social contact may experience <span class="highlight-negative">increased stress</span> and <span class="highlight-negative">decreased motivation</span>.</p>
+                        <p>Dr. Jane Smith, lead researcher, <span class="highlight-neutral">stated</span>, "It's <span class="highlight-neutral">important</span> for companies to <span class="highlight-neutral">recognize</span> these challenges and <span class="highlight-neutral">implement</span> strategies to support their remote workforce."</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h5>Emotion Legend</h5>
+                <div>
+                    <span class="emotion-badge emotion-positive">Positive</span>
+                    <span class="emotion-badge emotion-negative">Negative</span>
+                    <span class="emotion-badge emotion-neutral">Neutral</span>
+                </div>
+                <div class="mt-2">
+                    <span class="emotion-badge emotion-joy">Joy</span>
+                    <span class="emotion-badge emotion-anger">Anger</span>
+                    <span class="emotion-badge emotion-sadness">Sadness</span>
+                    <span class="emotion-badge emotion-fear">Fear</span>
+                    <span class="emotion-badge emotion-surprise">Surprise</span>
+                    <span class="emotion-badge emotion-disgust">Disgust</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Settings Section -->
+    <section id="settings" class="container">
+        <div class="settings-panel">
+            <h2 class="mb-4">Extension Settings</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Highlighting Options</h5>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="enableHighlighting" checked>
+                        <label class="form-check-label" for="enableHighlighting">
+                            Enable emotion highlighting
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="showEmojis" checked>
+                        <label class="form-check-label" for="showEmojis">
+                            Show emoji indicators
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="showTooltips" checked>
+                        <label class="form-check-label" for="showTooltips">
+                            Show explanatory tooltips
+                        </label>
+                    </div>
+                    
+                    <h5 class="mt-4">Emotion Filters</h5>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="filterPositive" checked>
+                        <label class="form-check-label" for="filterPositive">
+                            Highlight positive emotions
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="filterNegative" checked>
+                        <label class="form-check-label" for="filterNegative">
+                            Highlight negative emotions
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="filterNeutral" checked>
+                        <label class="form-check-label" for="filterNeutral">
+                            Highlight neutral emotions
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h5>Sensitivity Settings</h5>
+                    <label for="sensitivitySlider" class="form-label">Detection Sensitivity</label>
+                    <input type="range" class="form-range sensitivity-slider" min="1" max="10" value="5" id="sensitivitySlider">
+                    <div class="d-flex justify-content-between">
+                        <small>Low</small>
+                        <small>Medium</small>
+                        <small>High</small>
+                    </div>
+                    
+                    <h5 class="mt-4">Highlight Style</h5>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="highlightStyle" id="highlightBackground" checked>
+                        <label class="form-check-label" for="highlightBackground">
+                            Background color
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="highlightStyle" id="highlightUnderline">
+                        <label class="form-check-label" for="highlightUnderline">
+                            Underline
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="highlightStyle" id="highlightBorder">
+                        <label class="form-check-label" for="highlightBorder">
+                            Border
+                        </label>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button class="btn btn-primary" id="saveSettings">
+                            <i class="bi bi-check-circle me-2"></i>Save Settings
+                        </button>
+                        <button class="btn btn-outline-secondary ms-2" id="resetSettings">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Reset to Default
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Browser Extension Preview -->
+    <section id="install" class="container my-5">
+        <h2 class="text-center mb-4">Browser Extension Preview</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <h4 class="mb-3">Extension Popup</h4>
+                <div class="extension-popup">
+                    <div class="extension-header">
+                        <i class="bi bi-eye-fill me-2"></i>
+                        <span>EmotionLens</span>
+                    </div>
+                    <div class="extension-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Enable on this page</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Detection Sensitivity</small>
+                            <input type="range" class="form-range" min="1" max="10" value="5">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Highlight Emotions</small>
+                            <div class="mt-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="inlinePositive" checked>
+                                    <label class="form-check-label" for="inlinePositive">Positive</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="inlineNegative" checked>
+                                    <label class="form-check-label" for="inlineNegative">Negative</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="inlineNeutral">
+                                    <label class="form-check-label" for="inlineNeutral">Neutral</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary btn-sm w-100">Analyze Page</button>
+                    </div>
+                    <div class="extension-footer text-center">
+                        <small>Version 1.0.0</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <h4 class="mb-3">Installation Instructions</h4>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Chrome/Edge Installation</h5>
+                        <ol>
+                            <li>Download the extension file (.crx)</li>
+                            <li>Open Chrome/Edge and go to Extensions</li>
+                            <li>Enable Developer Mode</li>
+                            <li>Drag and drop the extension file</li>
+                            <li>Confirm installation</li>
+                        </ol>
+                        
+                        <h5 class="card-title mt-4">Firefox Installation</h5>
+                        <ol>
+                            <li>Download the extension file (.xpi)</li>
+                            <li>Open Firefox and go to Add-ons</li>
+                            <li>Click the gear icon and select "Install Add-on From File"</li>
+                            <li>Select the downloaded file</li>
+                            <li>Confirm installation</li>
+                        </ol>
+                        
+                        <div class="alert alert-info mt-4">
+                            <i class="bi bi-info-circle me-2"></i>
+                            The extension works locally on your device and doesn't send any data to external servers.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>EmotionLens</h5>
+                    <p>Making digital communications more accessible for neurodiverse users.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <h5>Resources</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50">Documentation</a></li>
+                        <li><a href="#" class="text-white-50">Research</a></li>
+                        <li><a href="#" class="text-white-50">Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4 bg-white-50">
+            <div class="text-center">
+                <p class="mb-0">&copy; 2023 EmotionLens. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <i class="bi bi-check-circle notification-icon"></i>
+        <div>
+            <strong id="notificationTitle">Success!</strong>
+            <p class="mb-0" id="notificationMessage">Your settings have been saved.</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // Add emotion tooltips to highlighted text
+            const highlightedElements = document.querySelectorAll('.highlight-positive, .highlight-negative, .highlight-neutral');
+            highlightedElements.forEach(element => {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'emotion-tooltip';
+                
+                if (element.classList.contains('highlight-positive')) {
+                    tooltip.textContent = 'Positive emotion detected';
+                } else if (element.classList.contains('highlight-negative')) {
+                    tooltip.textContent = 'Negative emotion detected';
+                } else if (element.classList.contains('highlight-neutral')) {
+                    tooltip.textContent = 'Neutral emotion detected';
+                }
+                
+                element.appendChild(tooltip);
+            });
+            
+            // Settings save functionality
+            document.getElementById('saveSettings').addEventListener('click', function() {
+                showNotification('Success!', 'Your settings have been saved.', 'success');
+            });
+            
+            // Settings reset functionality
+            document.getElementById('resetSettings').addEventListener('click', function() {
+                document.getElementById('sensitivitySlider').value = 5;
+                document.getElementById('enableHighlighting').checked = true;
+                document.getElementById('showEmojis').checked = true;
+                document.getElementById('showTooltips').checked = true;
+                document.getElementById('filterPositive').checked = true;
+                document.getElementById('filterNegative').checked = true;
+                document.getElementById('filterNeutral').checked = true;
+                document.getElementById('highlightBackground').checked = true;
+                
+                showNotification('Settings Reset', 'All settings have been reset to default values.', 'info');
+            });
+            
+            // Install button functionality
+            document.getElementById('installBtn').addEventListener('click', function() {
+                showNotification('Download Started', 'The extension is being downloaded.', 'success');
+            });
+            
+            // Notification function
+            function showNotification(title, message, type) {
+                const notification = document.getElementById('notification');
+                const notificationTitle = document.getElementById('notificationTitle');
+                const notificationMessage = document.getElementById('notificationMessage');
+                const notificationIcon = notification.querySelector('.notification-icon');
+                
+                notificationTitle.textContent = title;
+                notificationMessage.textContent = message;
+                
+                // Update icon based on type
+                notification.className = 'notification';
+                if (type === 'success') {
+                    notification.classList.add('notification-success');
+                    notificationIcon.className = 'bi bi-check-circle notification-icon';
+                } else if (type === 'info') {
+                    notification.classList.add('notification-info');
+                    notificationIcon.className = 'bi bi-info-circle notification-icon';
+                }
+                
+                // Show notification
+                notification.classList.add('show');
+                
+                // Hide after 3 seconds
+                setTimeout(function() {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Simulate extension toggle functionality
+            const toggleSwitches = document.querySelectorAll('.toggle-switch input');
+            toggleSwitches.forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    const status = this.checked ? 'enabled' : 'disabled';
+                    showNotification('Setting Updated', `Feature has been ${status}.`, 'info');
+                });
+            });
+            
+            // Simulate analyze page button
+            const analyzeButtons = document.querySelectorAll('button:contains("Analyze Page")');
+            analyzeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    showNotification('Analysis Complete', 'Page has been analyzed for emotional content.', 'success');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
